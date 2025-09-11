@@ -95,11 +95,11 @@
 # 
 
 # %%
-%pip install -q langgraph==0.3.31 
-%pip install -q langchain-ibm==0.3.10
-%pip install -q langchain==0.3.23
-%pip install -q langchain_community==0.3.21 
-%pip install -q pygraphviz==1.14
+#%pip install -q langgraph==0.3.31 
+#%pip install -q langchain-ibm==0.3.10
+#%pip install -q langchain==0.3.23
+#%pip install -q langchain_community==0.3.21 
+#%pip install -q pygraphviz==1.14
 
 # %%
 from langchain_ibm import ChatWatsonx
