@@ -1,0 +1,1521 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<p style=\"text-align:center\">\n",
+    "    <a href=\"https://skills.network\" target=\"_blank\">\n",
+    "    <img src=\"https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/assets/logos/SN_web_lightmode.png\" width=\"200\" alt=\"Skills Network Logo\"  />\n",
+    "    </a>\n",
+    "</p>\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# **ReAct: Build Reasoning and Acting AI Agents with LangGraph**\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Estimated time needed: **90** minutes\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "You're a software engineer on a mission: build an AI agent that doesn't just respond—it thinks. In this lab, you'll step into the role of an AI architect, designing a smart assistant that solves tough problems by reasoning through them and taking purposeful actions.\n",
+    "\n",
+    "Using the ReAct (Reasoning + Acting) framework, you'll teach your agent to think step by step, consult tools like search engines or calculators, and adapt on the fly. It’s not just about answers—it’s about how the agent gets there.\n",
+    "\n",
+    "By the end of the lab, your AI will face a mystery that can’t be solved with knowledge alone. It will need logic, resourcefulness, and the ability to act—just like you, the engineer who built it.\n",
+    "\n",
+    "## What is ReAct?\n",
+    "\n",
+    "**ReAct** stands for **Reasoning + Acting**. It's a framework that combines:\n",
+    "\n",
+    "1. **Reasoning**: The agent thinks through problems step by step, maintaining an internal dialogue about what it needs to do.\n",
+    "2. **Acting**: The agent can use external tools (search engines, calculators, APIs) to gather information or perform actions.\n",
+    "3. **Observing**: The agent processes the results from its actions and incorporates them into its reasoning.\n",
+    "\n",
+    "This creates a powerful loop: **Think → Act → Observe → Think → Act → ...**\n",
+    "\n",
+    "### Why ReAct Matters\n",
+    "\n",
+    "Traditional language models are limited by their training data cutoff and can't access real-time information. ReAct agents overcome this by:\n",
+    "- Accessing current information through web searches\n",
+    "- Performing calculations with specialized tools\n",
+    "- Breaking down complex problems into manageable steps\n",
+    "- Adapting their approach based on intermediate results\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## __Table of Contents__\n",
+    "\n",
+    "<ol>\n",
+    "    <li><a href=\"#Objectives\">Objectives</a></li>\n",
+    "    <li>\n",
+    "        <a href=\"#Setup-&-Installation\">Setup & Installation</a>\n",
+    "        <ol>\n",
+    "            <li><a href=\"#Installing-Required-Libraries\">Installing Required Libraries</a></li>\n",
+    "            <li><a href=\"#Importing-Required-Libraries\">Importing Required Libraries</a></li>\n",
+    "        </ol>\n",
+    "    </li>\n",
+    "    <li>\n",
+    "        <a href=\"#Understanding-Tools-in-ReAct\">Understanding Tools in ReAct</a>\n",
+    "        <ol>\n",
+    "            <li><a href=\"#1.-Web-Search-Tool\">1. Web Search Tool</a></li>\n",
+    "            <li><a href=\"#Theory-behind-Web-Search-Tools\">Theory behind Web Search Tools</a></li>\n",
+    "            <li><a href=\"#Testing-the-Search-Tool\">Testing the Search Tool</a></li>\n",
+    "            <li><a href=\"#2.-Clothing-Recommendation-Tool\">2. Clothing Recommendation Tool</a></li>\n",
+    "            <li><a href=\"#Why-this-Tool-Matters\">Why this Tool Matters</a></li>\n",
+    "            <li><a href=\"#Creating-the-tool-Registry\">Creating the tool Registry</a></li>\n",
+    "        </ol>\n",
+    "    </li>\n",
+    "    <li>\n",
+    "        <a href=\"#Setting-up-the-Language-Model\">Setting up the Language Model</a>\n",
+    "        <ol>\n",
+    "            <li><a href=\"#Initializing-the-AI-Model\">Initializing the AI Model</a></li>\n",
+    "            <li><a href=\"#Creating-the-System-Prompt\">Creating the System Prompt</a></li>\n",
+    "            <li><a href=\"#The-System-Prompt's-Role\">The System Prompt's Role</a></li>\n",
+    "            <li><a href=\"#Binding-Tools-to-the-Model\">Binding Tools to the Model</a></li>\n",
+    "            <li>\n",
+    "                <a href=\"#Understanding-Agent-State\">Understanding Agent State</a>\n",
+    "                <ol>\n",
+    "                    <li><a href=\"#What-is-Agent-State?\">What is Agent State?</a></li>\n",
+    "                    <li><a href=\"#Demonstrating-State-Management\">Demonstrating State Management</a></li>\n",
+    "                </ol>\n",
+    "            </li>\n",
+    "            <li>\n",
+    "                <a href=\"#Manual-ReAct-Execution-(Understanding-the-Flow)\">Manual ReAct Execution (Understanding the Flow)</a>\n",
+    "                <ol>\n",
+    "                    <li><a href=\"#Step-1:-Initial-Query-Processing\">Step 1: Initial Query Processing</a></li>\n",
+    "                    <li><a href=\"#Step-2:-Tool-Execution\">Step 2: Tool Execution</a></li>\n",
+    "                    <li><a href=\"#Step-3:-Processing-Results-and-Next-Action\">Step 3: Processing Results and Next Action</a></li>\n",
+    "                    <li><a href=\"#Step-4:-Final-Response-Generation\">Step 4: Final Response Generation</a></li>\n",
+    "                </ol>\n",
+    "            </li>\n",
+    "            <li>\n",
+    "                <a href=\"#Automating-ReAct-with-Graphs\">Automating ReAct with Graphs</a>\n",
+    "                <ol>\n",
+    "                    <li><a href=\"#Why-Use-Graphs?\">Why Use Graphs?</a></li>\n",
+    "                    <li><a href=\"#Building-the-Core-Functions\">Building the Core Functions</a></li>\n",
+    "                    <li><a href=\"#Constructing-the-State-Graph\">Constructing the State Graph</a></li>\n",
+    "                    <li><a href=\"#Visualizing-the-Graph\">Visualizing the Graph</a></li>\n",
+    "                </ol>\n",
+    "            </li>\n",
+    "            <li>\n",
+    "                <a href=\"#Running-the-Complete-ReAct-Agent\">Running the Complete ReAct Agent</a>\n",
+    "                <ol>\n",
+    "                    <li><a href=\"#Final-Execution\">Final Execution</a></li>\n",
+    "                    <li><a href=\"#The-Complete-ReAct-Cycle\">The Complete ReAct Cycle</a></li>\n",
+    "                </ol>\n",
+    "            </li>\n",
+    "        </ol>\n",
+    "    </li>\n",
+    "    <li>\n",
+    "        <a href=\"#Key-Takeaways\">Key Takeaways</a>\n",
+    "        <ol>\n",
+    "            <li><a href=\"#What-Makes-ReAct-Powerful\">What Makes ReAct Powerful</a></li>\n",
+    "            <li><a href=\"#Best-Practices\">Best Practices</a></li>\n",
+    "        </ol>\n",
+    "    </li>\n",
+    "    <li>\n",
+    "        <a href=\"#Exercises\">Exercises</a>\n",
+    "        <ol>\n",
+    "            <li><a href=\"#Exercise-1---Build-a-Calculator-Tool\">Exercise 1 - Build a Calculator Tool</a></li>\n",
+    "            <li><a href=\"#Exercise-2---Create-a-News-Summary-Tool\">Exercise 2 - Create a News Summary Tool</a></li>\n",
+    "        </ol>\n",
+    "    </li>\n",
+    "    <li><a href=\"#Testing-Your-Solutions\">Testing Your Solutions</a></li>\n",
+    "    <li><a href=\"#Authors\">Authors</a></li>\n",
+    "</ol>\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Objectives\n",
+    "\n",
+    "After completing this lab you will be able to:\n",
+    "\n",
+    " - Use the ReAct framework to solve multi-step problems with external tools\n",
+    " - Teach an AI agent to reason step by step, take actions, and adapt based on results\n",
+    " - Build a smart assistant that can handle tasks requiring logic and tool use\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "----\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Setup & Installation\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For this lab, we will be using the following libraries:\n",
+    "\n",
+    "\n",
+    "- [`LangGraph`](https://www.langchain.com/langgraph): A framework for building stateful, multi-step AI applications using graphs.\n",
+    "- [`LangChain`](https://www.langchain.com/): A toolkit that provides tools and abstractions for working with language models.\n",
+    "- [`LangChain-OpenAI`](https://python.langchain.com/docs/integrations/llms/openai/): OpenAI integration for LangChain.\n",
+    "- [`LangChain-Community`](https://python.langchain.com/api_reference/community/index.html): Community-contributed tools and integrations.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Installing Required Libraries\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Collecting langgraph\n",
+      "  Downloading langgraph-0.6.7-py3-none-any.whl.metadata (6.8 kB)\n",
+      "Collecting langchain-openai\n",
+      "  Downloading langchain_openai-0.3.33-py3-none-any.whl.metadata (2.4 kB)\n",
+      "Collecting langchain-core>=0.1 (from langgraph)\n",
+      "  Downloading langchain_core-0.3.76-py3-none-any.whl.metadata (3.7 kB)\n",
+      "Collecting langgraph-checkpoint<3.0.0,>=2.1.0 (from langgraph)\n",
+      "  Downloading langgraph_checkpoint-2.1.1-py3-none-any.whl.metadata (4.2 kB)\n",
+      "Collecting langgraph-prebuilt<0.7.0,>=0.6.0 (from langgraph)\n",
+      "  Downloading langgraph_prebuilt-0.6.4-py3-none-any.whl.metadata (4.5 kB)\n",
+      "Collecting langgraph-sdk<0.3.0,>=0.2.2 (from langgraph)\n",
+      "  Downloading langgraph_sdk-0.2.7-py3-none-any.whl.metadata (1.5 kB)\n",
+      "Requirement already satisfied: pydantic>=2.7.4 in /opt/conda/lib/python3.12/site-packages (from langgraph) (2.10.6)\n",
+      "Collecting xxhash>=3.5.0 (from langgraph)\n",
+      "  Downloading xxhash-3.5.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (12 kB)\n",
+      "Collecting openai<2.0.0,>=1.104.2 (from langchain-openai)\n",
+      "  Downloading openai-1.107.3-py3-none-any.whl.metadata (29 kB)\n",
+      "Collecting tiktoken<1,>=0.7 (from langchain-openai)\n",
+      "  Downloading tiktoken-0.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.7 kB)\n",
+      "Collecting langsmith>=0.3.45 (from langchain-core>=0.1->langgraph)\n",
+      "  Downloading langsmith-0.4.28-py3-none-any.whl.metadata (14 kB)\n",
+      "Requirement already satisfied: tenacity!=8.4.0,<10.0.0,>=8.1.0 in /opt/conda/lib/python3.12/site-packages (from langchain-core>=0.1->langgraph) (9.1.2)\n",
+      "Requirement already satisfied: jsonpatch<2.0,>=1.33 in /opt/conda/lib/python3.12/site-packages (from langchain-core>=0.1->langgraph) (1.33)\n",
+      "Requirement already satisfied: PyYAML>=5.3 in /opt/conda/lib/python3.12/site-packages (from langchain-core>=0.1->langgraph) (6.0.2)\n",
+      "Requirement already satisfied: typing-extensions>=4.7 in /opt/conda/lib/python3.12/site-packages (from langchain-core>=0.1->langgraph) (4.12.2)\n",
+      "Requirement already satisfied: packaging>=23.2 in /opt/conda/lib/python3.12/site-packages (from langchain-core>=0.1->langgraph) (24.2)\n",
+      "Collecting ormsgpack>=1.10.0 (from langgraph-checkpoint<3.0.0,>=2.1.0->langgraph)\n",
+      "  Downloading ormsgpack-1.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (43 kB)\n",
+      "Requirement already satisfied: httpx>=0.25.2 in /opt/conda/lib/python3.12/site-packages (from langgraph-sdk<0.3.0,>=0.2.2->langgraph) (0.28.1)\n",
+      "Collecting orjson>=3.10.1 (from langgraph-sdk<0.3.0,>=0.2.2->langgraph)\n",
+      "  Downloading orjson-3.11.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)\n",
+      "Requirement already satisfied: anyio<5,>=3.5.0 in /opt/conda/lib/python3.12/site-packages (from openai<2.0.0,>=1.104.2->langchain-openai) (4.8.0)\n",
+      "Requirement already satisfied: distro<2,>=1.7.0 in /opt/conda/lib/python3.12/site-packages (from openai<2.0.0,>=1.104.2->langchain-openai) (1.9.0)\n",
+      "Collecting jiter<1,>=0.4.0 (from openai<2.0.0,>=1.104.2->langchain-openai)\n",
+      "  Downloading jiter-0.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.2 kB)\n",
+      "Requirement already satisfied: sniffio in /opt/conda/lib/python3.12/site-packages (from openai<2.0.0,>=1.104.2->langchain-openai) (1.3.1)\n",
+      "Requirement already satisfied: tqdm>4 in /opt/conda/lib/python3.12/site-packages (from openai<2.0.0,>=1.104.2->langchain-openai) (4.67.1)\n",
+      "Requirement already satisfied: annotated-types>=0.6.0 in /opt/conda/lib/python3.12/site-packages (from pydantic>=2.7.4->langgraph) (0.7.0)\n",
+      "Requirement already satisfied: pydantic-core==2.27.2 in /opt/conda/lib/python3.12/site-packages (from pydantic>=2.7.4->langgraph) (2.27.2)\n",
+      "Collecting regex>=2022.1.18 (from tiktoken<1,>=0.7->langchain-openai)\n",
+      "  Downloading regex-2025.9.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)\n",
+      "Requirement already satisfied: requests>=2.26.0 in /opt/conda/lib/python3.12/site-packages (from tiktoken<1,>=0.7->langchain-openai) (2.32.3)\n",
+      "Requirement already satisfied: idna>=2.8 in /opt/conda/lib/python3.12/site-packages (from anyio<5,>=3.5.0->openai<2.0.0,>=1.104.2->langchain-openai) (3.10)\n",
+      "Requirement already satisfied: certifi in /opt/conda/lib/python3.12/site-packages (from httpx>=0.25.2->langgraph-sdk<0.3.0,>=0.2.2->langgraph) (2024.12.14)\n",
+      "Requirement already satisfied: httpcore==1.* in /opt/conda/lib/python3.12/site-packages (from httpx>=0.25.2->langgraph-sdk<0.3.0,>=0.2.2->langgraph) (1.0.7)\n",
+      "Requirement already satisfied: h11<0.15,>=0.13 in /opt/conda/lib/python3.12/site-packages (from httpcore==1.*->httpx>=0.25.2->langgraph-sdk<0.3.0,>=0.2.2->langgraph) (0.14.0)\n",
+      "Requirement already satisfied: jsonpointer>=1.9 in /opt/conda/lib/python3.12/site-packages (from jsonpatch<2.0,>=1.33->langchain-core>=0.1->langgraph) (3.0.0)\n",
+      "Collecting requests-toolbelt>=1.0.0 (from langsmith>=0.3.45->langchain-core>=0.1->langgraph)\n",
+      "  Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)\n",
+      "Requirement already satisfied: zstandard>=0.23.0 in /opt/conda/lib/python3.12/site-packages (from langsmith>=0.3.45->langchain-core>=0.1->langgraph) (0.23.0)\n",
+      "Requirement already satisfied: charset_normalizer<4,>=2 in /opt/conda/lib/python3.12/site-packages (from requests>=2.26.0->tiktoken<1,>=0.7->langchain-openai) (3.4.1)\n",
+      "Requirement already satisfied: urllib3<3,>=1.21.1 in /opt/conda/lib/python3.12/site-packages (from requests>=2.26.0->tiktoken<1,>=0.7->langchain-openai) (2.3.0)\n",
+      "Downloading langgraph-0.6.7-py3-none-any.whl (153 kB)\n",
+      "Downloading langchain_openai-0.3.33-py3-none-any.whl (74 kB)\n",
+      "Downloading langchain_core-0.3.76-py3-none-any.whl (447 kB)\n",
+      "Downloading langgraph_checkpoint-2.1.1-py3-none-any.whl (43 kB)\n",
+      "Downloading langgraph_prebuilt-0.6.4-py3-none-any.whl (28 kB)\n",
+      "Downloading langgraph_sdk-0.2.7-py3-none-any.whl (54 kB)\n",
+      "Downloading openai-1.107.3-py3-none-any.whl (947 kB)\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m947.6/947.6 kB\u001b[0m \u001b[31m60.2 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[?25hDownloading tiktoken-0.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.2 MB)\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.2/1.2 MB\u001b[0m \u001b[31m75.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[?25hDownloading xxhash-3.5.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (194 kB)\n",
+      "Downloading jiter-0.11.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (347 kB)\n",
+      "Downloading langsmith-0.4.28-py3-none-any.whl (384 kB)\n",
+      "Downloading orjson-3.11.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (132 kB)\n",
+      "Downloading ormsgpack-1.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (216 kB)\n",
+      "Downloading regex-2025.9.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (801 kB)\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m802.0/802.0 kB\u001b[0m \u001b[31m49.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[?25hDownloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)\n",
+      "Installing collected packages: xxhash, regex, ormsgpack, orjson, jiter, tiktoken, requests-toolbelt, openai, langsmith, langgraph-sdk, langchain-core, langgraph-checkpoint, langchain-openai, langgraph-prebuilt, langgraph\n",
+      "Successfully installed jiter-0.11.0 langchain-core-0.3.76 langchain-openai-0.3.33 langgraph-0.6.7 langgraph-checkpoint-2.1.1 langgraph-prebuilt-0.6.4 langgraph-sdk-0.2.7 langsmith-0.4.28 openai-1.107.3 orjson-3.11.3 ormsgpack-1.10.0 regex-2025.9.1 requests-toolbelt-1.0.0 tiktoken-0.11.0 xxhash-3.5.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "!pip install -U langgraph langchain-openai"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%capture\n",
+    "!pip install langgraph==0.3.34 langchain-openai==0.3.14 langchainhub==0.1.21 langchain==0.3.24 pygraphviz==1.14 langchain-community==0.3.23"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Understanding Tools in ReAct\n",
+    "\n",
+    "Tools are the \"acting\" part of ReAct. They give the agent capabilities beyond just generating text. Let's build two essential tools:\n",
+    "\n",
+    "#### 1. Web Search Tool\n",
+    "### Tavily Search API Key Setup\n",
+    "\n",
+    "We'll use Tavily search as our external research tool. You can get an API key at https://app.tavily.com/sign-in   \n",
+    "\n",
+    "\n",
+    "**Disclaimer:** Signing up for Tavily provides you with free credits, more than enough for this project's needs. If you require additional credits for further use, please add them at your own discretion.\n",
+    "\n",
+    "![image.png](https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/UjJx1-0vss4_3lwsUF8n0w/image.png)\n",
+    "\n",
+    "You need to copy the key from Tavily's API website and paste the key on the line ```os.environ[\"TAVILY_API_KEY\"] = \"YOUR_KEY_HERE\"```\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import warnings \n",
+    "warnings.filterwarnings('ignore')\n",
+    "\n",
+    "from langchain_community.tools.tavily_search import TavilySearchResults\n",
+    "from langchain.tools import tool\n",
+    "import os\n",
+    "import json\n",
+    "\n",
+    "os.environ[\"TAVILY_API_KEY\"] = \"YOUR_KEY_HERE\"\n",
+    "\n",
+    "# Initialize the Tavily search tool\n",
+    "search = TavilySearchResults()\n",
+    "\n",
+    "@tool\n",
+    "def search_tool(query: str):\n",
+    "    \"\"\"\n",
+    "    Search the web for information using Tavily API.\n",
+    "\n",
+    "    :param query: The search query string\n",
+    "    :return: Search results related to the query\n",
+    "    \"\"\"\n",
+    "    return search.invoke(query)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Theory behind Web Search Tools:\n",
+    "- Enable real-time information retrieval\n",
+    "- Overcome the knowledge cutoff limitation of language models\n",
+    "- Return structured data that the agent can process and reason about\n",
+    "\n",
+    "### Testing the Search Tool\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\""
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "search_tool.invoke(\"What's the weather like in Tokyo today?\")\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This test demonstrates how the agent can access current information that wasn't available during training.\n",
+    "\n",
+    "#### 2. Clothing Recommendation Tool\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "@tool\n",
+    "def recommend_clothing(weather: str) -> str:\n",
+    "    \"\"\"\n",
+    "    Returns a clothing recommendation based on the provided weather description.\n",
+    "\n",
+    "    This function examines the input string for specific keywords or temperature indicators \n",
+    "    (e.g., \"snow\", \"freezing\", \"rain\", \"85°F\") to suggest appropriate attire. It handles \n",
+    "    common weather conditions like snow, rain, heat, and cold by providing simple and practical \n",
+    "    clothing advice.\n",
+    "\n",
+    "    :param weather: A brief description of the weather (e.g., \"Overcast, 64.9°F\")\n",
+    "    :return: A string with clothing recommendations suitable for the weather\n",
+    "    \"\"\"\n",
+    "    weather = weather.lower()\n",
+    "    if \"snow\" in weather or \"freezing\" in weather:\n",
+    "        return \"Wear a heavy coat, gloves, and boots.\"\n",
+    "    elif \"rain\" in weather or \"wet\" in weather:\n",
+    "        return \"Bring a raincoat and waterproof shoes.\"\n",
+    "    elif \"hot\" in weather or \"85\" in weather:\n",
+    "        return \"T-shirt, shorts, and sunscreen recommended.\"\n",
+    "    elif \"cold\" in weather or \"50\" in weather:\n",
+    "        return \"Wear a warm jacket or sweater.\"\n",
+    "    else:\n",
+    "        return \"A light jacket should be fine.\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Why this Tool Matters:**\n",
+    "- Demonstrates domain-specific reasoning\n",
+    "- Shows how tools can process and interpret data from other tools\n",
+    "- Illustrates the composability of ReAct systems\n",
+    "\n",
+    "#### Creating the Tool Registry\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "tools=[search_tool,recommend_clothing]\n",
+    "\n",
+    "tools_by_name={ tool.name:tool for tool in tools}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This registry allows the agent to dynamically select and invoke the appropriate tool based on the task at hand.\n",
+    "\n",
+    "## Setting Up the Language Model\n",
+    "\n",
+    "### Initializing the AI Model\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from langchain_openai import ChatOpenAI\n",
+    "from langchain_core.tools import tool\n",
+    "\n",
+    "model = ChatOpenAI(model=\"gpt-4o-mini\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We're using GPT-4o-mini as our reasoning engine. This model will:\n",
+    "- Analyze user queries\n",
+    "- Decide which tools to use\n",
+    "- Process tool results\n",
+    "- Generate final responses\n",
+    "\n",
+    "### Creating the System Prompt\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder\n",
+    "from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage,SystemMessage\n",
+    "\n",
+    "chat_prompt = ChatPromptTemplate.from_messages([\n",
+    "    (\"system\", \"\"\"\n",
+    "You are a helpful AI assistant that thinks step-by-step and uses tools when needed.\n",
+    "\n",
+    "When responding to queries:\n",
+    "1. First, think about what information you need\n",
+    "2. Use available tools if you need current data or specific capabilities  \n",
+    "3. Provide clear, helpful responses based on your reasoning and any tool results\n",
+    "\n",
+    "Always explain your thinking process to help users understand your approach.\n",
+    "\"\"\"),\n",
+    "    MessagesPlaceholder(variable_name=\"scratch_pad\")\n",
+    "])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**The System Prompt's Role:**\n",
+    "- Defines the agent's behavior and personality\n",
+    "- Establishes the reasoning pattern (think → act → observe)\n",
+    "- Encourages transparency in the decision-making process\n",
+    "\n",
+    "### Binding Tools to the Model\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model_react=chat_prompt|model.bind_tools(tools)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This creates a model that can:\n",
+    "- Understand when to use tools\n",
+    "- Generate properly formatted tool calls\n",
+    "- Process tool results in context\n",
+    "\n",
+    "## Understanding Agent State\n",
+    "\n",
+    "### What is Agent State?\n",
+    "\n",
+    "In ReAct, state management is crucial, as the agent must maintain context across multiple reasoning and acting steps.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from typing import (Annotated,Sequence,TypedDict)\n",
+    "from langchain_core.messages import BaseMessage\n",
+    "from langgraph.graph.message import add_messages\n",
+    "\n",
+    "class AgentState(TypedDict):\n",
+    "    \"\"\"The state of the agent.\"\"\"\n",
+    "\n",
+    "    # add_messages is a reducer\n",
+    "    # See https://langchain-ai.github.io/langgraph/concepts/low_level/#reducers\n",
+    "    messages: Annotated[Sequence[BaseMessage], add_messages]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Key Concepts:**\n",
+    "- **State**: Contains the conversation history and context.\n",
+    "- **Reducer**: `add_messages` automatically handles adding new messages to the conversation.\n",
+    "- **Type Safety**: TypedDict ensures our state structure is well-defined.\n",
+    "\n",
+    "### Demonstrating State Management\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "After greeting: [HumanMessage(content='Hi', additional_kwargs={}, response_metadata={}, id='2c89dd48-18c4-445c-9967-287ea6ec8832')]\n",
+      "After question: {'messages': [HumanMessage(content='Hi', additional_kwargs={}, response_metadata={}, id='2c89dd48-18c4-445c-9967-287ea6ec8832'), HumanMessage(content='Weather in NYC?', additional_kwargs={}, response_metadata={}, id='a1a59415-d5de-43c8-8c5b-3bc1feccb98c')]}\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Example conversation flow:\n",
+    "state: AgentState = {\"messages\": []}\n",
+    "\n",
+    "# append a message using the reducer properly\n",
+    "state[\"messages\"] = add_messages(state[\"messages\"], [HumanMessage(content=\"Hi\")])\n",
+    "print(\"After greeting:\", state[\"messages\"])\n",
+    "\n",
+    "# add another message (e.g. a question)\n",
+    "state[\"messages\"] = add_messages(state[\"messages\"], [HumanMessage(content=\"Weather in NYC?\")])\n",
+    "print(\"After question:\", state)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This demonstrates how the state accumulates context over the conversation.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Manual ReAct Execution (Understanding the Flow)\n",
+    "\n",
+    "Before building the automated graph, let's manually step through a ReAct cycle to understand what happens:\n",
+    "\n",
+    "### Step 1: Initial Query Processing\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dummy_state: AgentState = {\n",
+    "    \"messages\": [HumanMessage( \"What's the weather like in Zurich, and what should I wear based on the temperature?\")]}\n",
+    "\n",
+    "response = model_react.invoke({\"scratch_pad\":dummy_state[\"messages\"]})\n",
+    "\n",
+    "dummy_state[\"messages\"]=add_messages(dummy_state[\"messages\"],[response])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**What Happens Here:**\n",
+    "1. The user asks a complex question requiring current data.\n",
+    "2. The model analyzes the query and realizes it needs to search for weather information.\n",
+    "3. The model generates a tool call for the search.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Step 2: Tool Execution\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Tool call: {'name': 'search_tool', 'args': {'query': 'current weather Zurich'}, 'id': 'call_l1lZw9NdVYqfwUJWOj5biwnx', 'type': 'tool_call'}\n"
+     ]
+    },
+    {
+     "ename": "TypeError",
+     "evalue": "string indices must be integers, not 'str'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn[23], line 5\u001b[0m\n\u001b[1;32m      2\u001b[0m \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mTool call:\u001b[39m\u001b[38;5;124m\"\u001b[39m, tool_call)\n\u001b[1;32m      4\u001b[0m tool_result \u001b[38;5;241m=\u001b[39m tools_by_name[tool_call[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mname\u001b[39m\u001b[38;5;124m\"\u001b[39m]]\u001b[38;5;241m.\u001b[39minvoke(tool_call[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124margs\u001b[39m\u001b[38;5;124m\"\u001b[39m])\n\u001b[0;32m----> 5\u001b[0m \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mTool result preview:\u001b[39m\u001b[38;5;124m\"\u001b[39m, \u001b[43mtool_result\u001b[49m\u001b[43m[\u001b[49m\u001b[38;5;241;43m0\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m[\u001b[49m\u001b[38;5;124;43m'\u001b[39;49m\u001b[38;5;124;43mtitle\u001b[39;49m\u001b[38;5;124;43m'\u001b[39;49m\u001b[43m]\u001b[49m)\n\u001b[1;32m      7\u001b[0m tool_message \u001b[38;5;241m=\u001b[39m ToolMessage(\n\u001b[1;32m      8\u001b[0m     content\u001b[38;5;241m=\u001b[39mjson\u001b[38;5;241m.\u001b[39mdumps(tool_result),\n\u001b[1;32m      9\u001b[0m     name\u001b[38;5;241m=\u001b[39mtool_call[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mname\u001b[39m\u001b[38;5;124m\"\u001b[39m],\n\u001b[1;32m     10\u001b[0m     tool_call_id\u001b[38;5;241m=\u001b[39mtool_call[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mid\u001b[39m\u001b[38;5;124m\"\u001b[39m]\n\u001b[1;32m     11\u001b[0m )\n\u001b[1;32m     12\u001b[0m dummy_state[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mmessages\u001b[39m\u001b[38;5;124m\"\u001b[39m] \u001b[38;5;241m=\u001b[39m add_messages(dummy_state[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mmessages\u001b[39m\u001b[38;5;124m\"\u001b[39m], [tool_message])\n",
+      "\u001b[0;31mTypeError\u001b[0m: string indices must be integers, not 'str'"
+     ]
+    }
+   ],
+   "source": [
+    "tool_call = response.tool_calls[-1]\n",
+    "print(\"Tool call:\", tool_call)\n",
+    "\n",
+    "tool_result = tools_by_name[tool_call[\"name\"]].invoke(tool_call[\"args\"])\n",
+    "print(\"Tool result preview:\", tool_result[0]['title'])\n",
+    "\n",
+    "tool_message = ToolMessage(\n",
+    "    content=json.dumps(tool_result),\n",
+    "    name=tool_call[\"name\"],\n",
+    "    tool_call_id=tool_call[\"id\"]\n",
+    ")\n",
+    "dummy_state[\"messages\"] = add_messages(dummy_state[\"messages\"], [tool_message])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**What Happens Here:**\n",
+    "1. Extract the tool call from the model's response.\n",
+    "2. Execute the tool using the specified arguments.\n",
+    "3. Create a ToolMessage containing the results.\n",
+    "4. Add the tool result to the conversation state.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Step 3: Processing Results and Next Action\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ValueError",
+     "evalue": "{'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_l1lZw9NdVYqfwUJWOj5biwnx\", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn[24], line 1\u001b[0m\n\u001b[0;32m----> 1\u001b[0m response \u001b[38;5;241m=\u001b[39m \u001b[43mmodel_react\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43minvoke\u001b[49m\u001b[43m(\u001b[49m\u001b[43m{\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mscratch_pad\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m:\u001b[49m\u001b[43m \u001b[49m\u001b[43mdummy_state\u001b[49m\u001b[43m[\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mmessages\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m}\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m      2\u001b[0m dummy_state[\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mmessages\u001b[39m\u001b[38;5;124m'\u001b[39m] \u001b[38;5;241m=\u001b[39m add_messages(dummy_state[\u001b[38;5;124m'\u001b[39m\u001b[38;5;124mmessages\u001b[39m\u001b[38;5;124m'\u001b[39m], [response])\n\u001b[1;32m      4\u001b[0m \u001b[38;5;66;03m# check if the model wants to use another tool\u001b[39;00m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/runnables/base.py:3245\u001b[0m, in \u001b[0;36mRunnableSequence.invoke\u001b[0;34m(self, input, config, **kwargs)\u001b[0m\n\u001b[1;32m   3243\u001b[0m                 input_ \u001b[38;5;241m=\u001b[39m context\u001b[38;5;241m.\u001b[39mrun(step\u001b[38;5;241m.\u001b[39minvoke, input_, config, \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs)\n\u001b[1;32m   3244\u001b[0m             \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[0;32m-> 3245\u001b[0m                 input_ \u001b[38;5;241m=\u001b[39m \u001b[43mcontext\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mrun\u001b[49m\u001b[43m(\u001b[49m\u001b[43mstep\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43minvoke\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43minput_\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mconfig\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m   3246\u001b[0m \u001b[38;5;66;03m# finish the root run\u001b[39;00m\n\u001b[1;32m   3247\u001b[0m \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mBaseException\u001b[39;00m \u001b[38;5;28;01mas\u001b[39;00m e:\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/runnables/base.py:5710\u001b[0m, in \u001b[0;36mRunnableBindingBase.invoke\u001b[0;34m(self, input, config, **kwargs)\u001b[0m\n\u001b[1;32m   5703\u001b[0m \u001b[38;5;129m@override\u001b[39m\n\u001b[1;32m   5704\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;21minvoke\u001b[39m(\n\u001b[1;32m   5705\u001b[0m     \u001b[38;5;28mself\u001b[39m,\n\u001b[0;32m   (...)\u001b[0m\n\u001b[1;32m   5708\u001b[0m     \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs: Optional[Any],\n\u001b[1;32m   5709\u001b[0m ) \u001b[38;5;241m-\u001b[39m\u001b[38;5;241m>\u001b[39m Output:\n\u001b[0;32m-> 5710\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mbound\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43minvoke\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m   5711\u001b[0m \u001b[43m        \u001b[49m\u001b[38;5;28;43minput\u001b[39;49m\u001b[43m,\u001b[49m\n\u001b[1;32m   5712\u001b[0m \u001b[43m        \u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_merge_configs\u001b[49m\u001b[43m(\u001b[49m\u001b[43mconfig\u001b[49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m   5713\u001b[0m \u001b[43m        \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43m{\u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m}\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m   5714\u001b[0m \u001b[43m    \u001b[49m\u001b[43m)\u001b[49m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:395\u001b[0m, in \u001b[0;36mBaseChatModel.invoke\u001b[0;34m(self, input, config, stop, **kwargs)\u001b[0m\n\u001b[1;32m    383\u001b[0m \u001b[38;5;129m@override\u001b[39m\n\u001b[1;32m    384\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;21minvoke\u001b[39m(\n\u001b[1;32m    385\u001b[0m     \u001b[38;5;28mself\u001b[39m,\n\u001b[0;32m   (...)\u001b[0m\n\u001b[1;32m    390\u001b[0m     \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs: Any,\n\u001b[1;32m    391\u001b[0m ) \u001b[38;5;241m-\u001b[39m\u001b[38;5;241m>\u001b[39m BaseMessage:\n\u001b[1;32m    392\u001b[0m     config \u001b[38;5;241m=\u001b[39m ensure_config(config)\n\u001b[1;32m    393\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m cast(\n\u001b[1;32m    394\u001b[0m         \u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mChatGeneration\u001b[39m\u001b[38;5;124m\"\u001b[39m,\n\u001b[0;32m--> 395\u001b[0m         \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mgenerate_prompt\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m    396\u001b[0m \u001b[43m            \u001b[49m\u001b[43m[\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_convert_input\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;28;43minput\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    397\u001b[0m \u001b[43m            \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    398\u001b[0m \u001b[43m            \u001b[49m\u001b[43mcallbacks\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mcallbacks\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    399\u001b[0m \u001b[43m            \u001b[49m\u001b[43mtags\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mtags\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    400\u001b[0m \u001b[43m            \u001b[49m\u001b[43mmetadata\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mmetadata\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    401\u001b[0m \u001b[43m            \u001b[49m\u001b[43mrun_name\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mrun_name\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    402\u001b[0m \u001b[43m            \u001b[49m\u001b[43mrun_id\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mpop\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mrun_id\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    403\u001b[0m \u001b[43m            \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    404\u001b[0m \u001b[43m        \u001b[49m\u001b[43m)\u001b[49m\u001b[38;5;241m.\u001b[39mgenerations[\u001b[38;5;241m0\u001b[39m][\u001b[38;5;241m0\u001b[39m],\n\u001b[1;32m    405\u001b[0m     )\u001b[38;5;241m.\u001b[39mmessage\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:1023\u001b[0m, in \u001b[0;36mBaseChatModel.generate_prompt\u001b[0;34m(self, prompts, stop, callbacks, **kwargs)\u001b[0m\n\u001b[1;32m   1014\u001b[0m \u001b[38;5;129m@override\u001b[39m\n\u001b[1;32m   1015\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;21mgenerate_prompt\u001b[39m(\n\u001b[1;32m   1016\u001b[0m     \u001b[38;5;28mself\u001b[39m,\n\u001b[0;32m   (...)\u001b[0m\n\u001b[1;32m   1020\u001b[0m     \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs: Any,\n\u001b[1;32m   1021\u001b[0m ) \u001b[38;5;241m-\u001b[39m\u001b[38;5;241m>\u001b[39m LLMResult:\n\u001b[1;32m   1022\u001b[0m     prompt_messages \u001b[38;5;241m=\u001b[39m [p\u001b[38;5;241m.\u001b[39mto_messages() \u001b[38;5;28;01mfor\u001b[39;00m p \u001b[38;5;129;01min\u001b[39;00m prompts]\n\u001b[0;32m-> 1023\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mgenerate\u001b[49m\u001b[43m(\u001b[49m\u001b[43mprompt_messages\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mcallbacks\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mcallbacks\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m)\u001b[49m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:840\u001b[0m, in \u001b[0;36mBaseChatModel.generate\u001b[0;34m(self, messages, stop, callbacks, tags, metadata, run_name, run_id, **kwargs)\u001b[0m\n\u001b[1;32m    837\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m i, m \u001b[38;5;129;01min\u001b[39;00m \u001b[38;5;28menumerate\u001b[39m(input_messages):\n\u001b[1;32m    838\u001b[0m     \u001b[38;5;28;01mtry\u001b[39;00m:\n\u001b[1;32m    839\u001b[0m         results\u001b[38;5;241m.\u001b[39mappend(\n\u001b[0;32m--> 840\u001b[0m             \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_generate_with_cache\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m    841\u001b[0m \u001b[43m                \u001b[49m\u001b[43mm\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    842\u001b[0m \u001b[43m                \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    843\u001b[0m \u001b[43m                \u001b[49m\u001b[43mrun_manager\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mrun_managers\u001b[49m\u001b[43m[\u001b[49m\u001b[43mi\u001b[49m\u001b[43m]\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mif\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[43mrun_managers\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01melse\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m,\u001b[49m\n\u001b[1;32m    844\u001b[0m \u001b[43m                \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    845\u001b[0m \u001b[43m            \u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m    846\u001b[0m         )\n\u001b[1;32m    847\u001b[0m     \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mBaseException\u001b[39;00m \u001b[38;5;28;01mas\u001b[39;00m e:\n\u001b[1;32m    848\u001b[0m         \u001b[38;5;28;01mif\u001b[39;00m run_managers:\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:1089\u001b[0m, in \u001b[0;36mBaseChatModel._generate_with_cache\u001b[0;34m(self, messages, stop, run_manager, **kwargs)\u001b[0m\n\u001b[1;32m   1087\u001b[0m     result \u001b[38;5;241m=\u001b[39m generate_from_stream(\u001b[38;5;28miter\u001b[39m(chunks))\n\u001b[1;32m   1088\u001b[0m \u001b[38;5;28;01melif\u001b[39;00m inspect\u001b[38;5;241m.\u001b[39msignature(\u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39m_generate)\u001b[38;5;241m.\u001b[39mparameters\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mrun_manager\u001b[39m\u001b[38;5;124m\"\u001b[39m):\n\u001b[0;32m-> 1089\u001b[0m     result \u001b[38;5;241m=\u001b[39m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_generate\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m   1090\u001b[0m \u001b[43m        \u001b[49m\u001b[43mmessages\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mrun_manager\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mrun_manager\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\n\u001b[1;32m   1091\u001b[0m \u001b[43m    \u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m   1092\u001b[0m \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[1;32m   1093\u001b[0m     result \u001b[38;5;241m=\u001b[39m \u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39m_generate(messages, stop\u001b[38;5;241m=\u001b[39mstop, \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs)\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_openai/chat_models/base.py:992\u001b[0m, in \u001b[0;36mBaseChatOpenAI._generate\u001b[0;34m(self, messages, stop, run_manager, **kwargs)\u001b[0m\n\u001b[1;32m    990\u001b[0m \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[1;32m    991\u001b[0m     response \u001b[38;5;241m=\u001b[39m \u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39mclient\u001b[38;5;241m.\u001b[39mcreate(\u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mpayload)\n\u001b[0;32m--> 992\u001b[0m \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_create_chat_result\u001b[49m\u001b[43m(\u001b[49m\u001b[43mresponse\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mgeneration_info\u001b[49m\u001b[43m)\u001b[49m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_openai/chat_models/base.py:1033\u001b[0m, in \u001b[0;36mBaseChatOpenAI._create_chat_result\u001b[0;34m(self, response, generation_info)\u001b[0m\n\u001b[1;32m   1028\u001b[0m \u001b[38;5;66;03m# Sometimes the AI Model calling will get error, we should raise it.\u001b[39;00m\n\u001b[1;32m   1029\u001b[0m \u001b[38;5;66;03m# Otherwise, the next code 'choices.extend(response[\"choices\"])'\u001b[39;00m\n\u001b[1;32m   1030\u001b[0m \u001b[38;5;66;03m# will throw a \"TypeError: 'NoneType' object is not iterable\" error\u001b[39;00m\n\u001b[1;32m   1031\u001b[0m \u001b[38;5;66;03m# to mask the true error. Because 'response[\"choices\"]' is None.\u001b[39;00m\n\u001b[1;32m   1032\u001b[0m \u001b[38;5;28;01mif\u001b[39;00m response_dict\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124merror\u001b[39m\u001b[38;5;124m\"\u001b[39m):\n\u001b[0;32m-> 1033\u001b[0m     \u001b[38;5;28;01mraise\u001b[39;00m \u001b[38;5;167;01mValueError\u001b[39;00m(response_dict\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124merror\u001b[39m\u001b[38;5;124m\"\u001b[39m))\n\u001b[1;32m   1035\u001b[0m token_usage \u001b[38;5;241m=\u001b[39m response_dict\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124musage\u001b[39m\u001b[38;5;124m\"\u001b[39m)\n\u001b[1;32m   1036\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m res \u001b[38;5;129;01min\u001b[39;00m response_dict[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mchoices\u001b[39m\u001b[38;5;124m\"\u001b[39m]:\n",
+      "\u001b[0;31mValueError\u001b[0m: {'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_l1lZw9NdVYqfwUJWOj5biwnx\", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}"
+     ]
+    }
+   ],
+   "source": [
+    "response = model_react.invoke({\"scratch_pad\": dummy_state[\"messages\"]})\n",
+    "dummy_state['messages'] = add_messages(dummy_state['messages'], [response])\n",
+    "\n",
+    "# check if the model wants to use another tool\n",
+    "if response.tool_calls:\n",
+    "    tool_call = response.tool_calls[0]\n",
+    "    tool_result = tools_by_name[tool_call[\"name\"]].invoke(tool_call[\"args\"])\n",
+    "    tool_message = ToolMessage(\n",
+    "        content=json.dumps(tool_result),\n",
+    "        name=tool_call[\"name\"],\n",
+    "        tool_call_id=tool_call[\"id\"]\n",
+    "    )\n",
+    "    dummy_state['messages'] = add_messages(dummy_state['messages'], [tool_message])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**What Happens Here:**\n",
+    "1. The model processes the search results.\n",
+    "2. It realizes it needs to use the clothing recommendation tool.\n",
+    "3. It extracts weather information and calls the clothing tool.\n",
+    "4. It receives clothing recommendations based on the weather data.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Step 4: Final Response Generation\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ValueError",
+     "evalue": "{'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_l1lZw9NdVYqfwUJWOj5biwnx\", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mValueError\u001b[0m                                Traceback (most recent call last)",
+      "Cell \u001b[0;32mIn[25], line 1\u001b[0m\n\u001b[0;32m----> 1\u001b[0m response \u001b[38;5;241m=\u001b[39m \u001b[43mmodel_react\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43minvoke\u001b[49m\u001b[43m(\u001b[49m\u001b[43m{\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mscratch_pad\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m:\u001b[49m\u001b[43m \u001b[49m\u001b[43mdummy_state\u001b[49m\u001b[43m[\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mmessages\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m}\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m      2\u001b[0m \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mFinal response generated:\u001b[39m\u001b[38;5;124m\"\u001b[39m, response\u001b[38;5;241m.\u001b[39mcontent \u001b[38;5;129;01mis\u001b[39;00m \u001b[38;5;129;01mnot\u001b[39;00m \u001b[38;5;28;01mNone\u001b[39;00m)\n\u001b[1;32m      3\u001b[0m \u001b[38;5;28mprint\u001b[39m(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mMore tools needed:\u001b[39m\u001b[38;5;124m\"\u001b[39m, \u001b[38;5;28mbool\u001b[39m(response\u001b[38;5;241m.\u001b[39mtool_calls))\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/runnables/base.py:3245\u001b[0m, in \u001b[0;36mRunnableSequence.invoke\u001b[0;34m(self, input, config, **kwargs)\u001b[0m\n\u001b[1;32m   3243\u001b[0m                 input_ \u001b[38;5;241m=\u001b[39m context\u001b[38;5;241m.\u001b[39mrun(step\u001b[38;5;241m.\u001b[39minvoke, input_, config, \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs)\n\u001b[1;32m   3244\u001b[0m             \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[0;32m-> 3245\u001b[0m                 input_ \u001b[38;5;241m=\u001b[39m \u001b[43mcontext\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mrun\u001b[49m\u001b[43m(\u001b[49m\u001b[43mstep\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43minvoke\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43minput_\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mconfig\u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m   3246\u001b[0m \u001b[38;5;66;03m# finish the root run\u001b[39;00m\n\u001b[1;32m   3247\u001b[0m \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mBaseException\u001b[39;00m \u001b[38;5;28;01mas\u001b[39;00m e:\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/runnables/base.py:5710\u001b[0m, in \u001b[0;36mRunnableBindingBase.invoke\u001b[0;34m(self, input, config, **kwargs)\u001b[0m\n\u001b[1;32m   5703\u001b[0m \u001b[38;5;129m@override\u001b[39m\n\u001b[1;32m   5704\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;21minvoke\u001b[39m(\n\u001b[1;32m   5705\u001b[0m     \u001b[38;5;28mself\u001b[39m,\n\u001b[0;32m   (...)\u001b[0m\n\u001b[1;32m   5708\u001b[0m     \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs: Optional[Any],\n\u001b[1;32m   5709\u001b[0m ) \u001b[38;5;241m-\u001b[39m\u001b[38;5;241m>\u001b[39m Output:\n\u001b[0;32m-> 5710\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mbound\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43minvoke\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m   5711\u001b[0m \u001b[43m        \u001b[49m\u001b[38;5;28;43minput\u001b[39;49m\u001b[43m,\u001b[49m\n\u001b[1;32m   5712\u001b[0m \u001b[43m        \u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_merge_configs\u001b[49m\u001b[43m(\u001b[49m\u001b[43mconfig\u001b[49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m   5713\u001b[0m \u001b[43m        \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43m{\u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m}\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m   5714\u001b[0m \u001b[43m    \u001b[49m\u001b[43m)\u001b[49m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:395\u001b[0m, in \u001b[0;36mBaseChatModel.invoke\u001b[0;34m(self, input, config, stop, **kwargs)\u001b[0m\n\u001b[1;32m    383\u001b[0m \u001b[38;5;129m@override\u001b[39m\n\u001b[1;32m    384\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;21minvoke\u001b[39m(\n\u001b[1;32m    385\u001b[0m     \u001b[38;5;28mself\u001b[39m,\n\u001b[0;32m   (...)\u001b[0m\n\u001b[1;32m    390\u001b[0m     \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs: Any,\n\u001b[1;32m    391\u001b[0m ) \u001b[38;5;241m-\u001b[39m\u001b[38;5;241m>\u001b[39m BaseMessage:\n\u001b[1;32m    392\u001b[0m     config \u001b[38;5;241m=\u001b[39m ensure_config(config)\n\u001b[1;32m    393\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m cast(\n\u001b[1;32m    394\u001b[0m         \u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mChatGeneration\u001b[39m\u001b[38;5;124m\"\u001b[39m,\n\u001b[0;32m--> 395\u001b[0m         \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mgenerate_prompt\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m    396\u001b[0m \u001b[43m            \u001b[49m\u001b[43m[\u001b[49m\u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_convert_input\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;28;43minput\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    397\u001b[0m \u001b[43m            \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    398\u001b[0m \u001b[43m            \u001b[49m\u001b[43mcallbacks\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mcallbacks\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    399\u001b[0m \u001b[43m            \u001b[49m\u001b[43mtags\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mtags\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    400\u001b[0m \u001b[43m            \u001b[49m\u001b[43mmetadata\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mmetadata\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    401\u001b[0m \u001b[43m            \u001b[49m\u001b[43mrun_name\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mget\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mrun_name\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    402\u001b[0m \u001b[43m            \u001b[49m\u001b[43mrun_id\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mconfig\u001b[49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mpop\u001b[49m\u001b[43m(\u001b[49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[38;5;124;43mrun_id\u001b[39;49m\u001b[38;5;124;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m)\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    403\u001b[0m \u001b[43m            \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    404\u001b[0m \u001b[43m        \u001b[49m\u001b[43m)\u001b[49m\u001b[38;5;241m.\u001b[39mgenerations[\u001b[38;5;241m0\u001b[39m][\u001b[38;5;241m0\u001b[39m],\n\u001b[1;32m    405\u001b[0m     )\u001b[38;5;241m.\u001b[39mmessage\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:1023\u001b[0m, in \u001b[0;36mBaseChatModel.generate_prompt\u001b[0;34m(self, prompts, stop, callbacks, **kwargs)\u001b[0m\n\u001b[1;32m   1014\u001b[0m \u001b[38;5;129m@override\u001b[39m\n\u001b[1;32m   1015\u001b[0m \u001b[38;5;28;01mdef\u001b[39;00m\u001b[38;5;250m \u001b[39m\u001b[38;5;21mgenerate_prompt\u001b[39m(\n\u001b[1;32m   1016\u001b[0m     \u001b[38;5;28mself\u001b[39m,\n\u001b[0;32m   (...)\u001b[0m\n\u001b[1;32m   1020\u001b[0m     \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs: Any,\n\u001b[1;32m   1021\u001b[0m ) \u001b[38;5;241m-\u001b[39m\u001b[38;5;241m>\u001b[39m LLMResult:\n\u001b[1;32m   1022\u001b[0m     prompt_messages \u001b[38;5;241m=\u001b[39m [p\u001b[38;5;241m.\u001b[39mto_messages() \u001b[38;5;28;01mfor\u001b[39;00m p \u001b[38;5;129;01min\u001b[39;00m prompts]\n\u001b[0;32m-> 1023\u001b[0m     \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43mgenerate\u001b[49m\u001b[43m(\u001b[49m\u001b[43mprompt_messages\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mcallbacks\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mcallbacks\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m)\u001b[49m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:840\u001b[0m, in \u001b[0;36mBaseChatModel.generate\u001b[0;34m(self, messages, stop, callbacks, tags, metadata, run_name, run_id, **kwargs)\u001b[0m\n\u001b[1;32m    837\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m i, m \u001b[38;5;129;01min\u001b[39;00m \u001b[38;5;28menumerate\u001b[39m(input_messages):\n\u001b[1;32m    838\u001b[0m     \u001b[38;5;28;01mtry\u001b[39;00m:\n\u001b[1;32m    839\u001b[0m         results\u001b[38;5;241m.\u001b[39mappend(\n\u001b[0;32m--> 840\u001b[0m             \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_generate_with_cache\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m    841\u001b[0m \u001b[43m                \u001b[49m\u001b[43mm\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    842\u001b[0m \u001b[43m                \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    843\u001b[0m \u001b[43m                \u001b[49m\u001b[43mrun_manager\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mrun_managers\u001b[49m\u001b[43m[\u001b[49m\u001b[43mi\u001b[49m\u001b[43m]\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mif\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[43mrun_managers\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;28;43;01melse\u001b[39;49;00m\u001b[43m \u001b[49m\u001b[38;5;28;43;01mNone\u001b[39;49;00m\u001b[43m,\u001b[49m\n\u001b[1;32m    844\u001b[0m \u001b[43m                \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\u001b[43m,\u001b[49m\n\u001b[1;32m    845\u001b[0m \u001b[43m            \u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m    846\u001b[0m         )\n\u001b[1;32m    847\u001b[0m     \u001b[38;5;28;01mexcept\u001b[39;00m \u001b[38;5;167;01mBaseException\u001b[39;00m \u001b[38;5;28;01mas\u001b[39;00m e:\n\u001b[1;32m    848\u001b[0m         \u001b[38;5;28;01mif\u001b[39;00m run_managers:\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_core/language_models/chat_models.py:1089\u001b[0m, in \u001b[0;36mBaseChatModel._generate_with_cache\u001b[0;34m(self, messages, stop, run_manager, **kwargs)\u001b[0m\n\u001b[1;32m   1087\u001b[0m     result \u001b[38;5;241m=\u001b[39m generate_from_stream(\u001b[38;5;28miter\u001b[39m(chunks))\n\u001b[1;32m   1088\u001b[0m \u001b[38;5;28;01melif\u001b[39;00m inspect\u001b[38;5;241m.\u001b[39msignature(\u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39m_generate)\u001b[38;5;241m.\u001b[39mparameters\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mrun_manager\u001b[39m\u001b[38;5;124m\"\u001b[39m):\n\u001b[0;32m-> 1089\u001b[0m     result \u001b[38;5;241m=\u001b[39m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_generate\u001b[49m\u001b[43m(\u001b[49m\n\u001b[1;32m   1090\u001b[0m \u001b[43m        \u001b[49m\u001b[43mmessages\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mstop\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mstop\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mrun_manager\u001b[49m\u001b[38;5;241;43m=\u001b[39;49m\u001b[43mrun_manager\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[38;5;241;43m*\u001b[39;49m\u001b[43mkwargs\u001b[49m\n\u001b[1;32m   1091\u001b[0m \u001b[43m    \u001b[49m\u001b[43m)\u001b[49m\n\u001b[1;32m   1092\u001b[0m \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[1;32m   1093\u001b[0m     result \u001b[38;5;241m=\u001b[39m \u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39m_generate(messages, stop\u001b[38;5;241m=\u001b[39mstop, \u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mkwargs)\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_openai/chat_models/base.py:992\u001b[0m, in \u001b[0;36mBaseChatOpenAI._generate\u001b[0;34m(self, messages, stop, run_manager, **kwargs)\u001b[0m\n\u001b[1;32m    990\u001b[0m \u001b[38;5;28;01melse\u001b[39;00m:\n\u001b[1;32m    991\u001b[0m     response \u001b[38;5;241m=\u001b[39m \u001b[38;5;28mself\u001b[39m\u001b[38;5;241m.\u001b[39mclient\u001b[38;5;241m.\u001b[39mcreate(\u001b[38;5;241m*\u001b[39m\u001b[38;5;241m*\u001b[39mpayload)\n\u001b[0;32m--> 992\u001b[0m \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[38;5;28;43mself\u001b[39;49m\u001b[38;5;241;43m.\u001b[39;49m\u001b[43m_create_chat_result\u001b[49m\u001b[43m(\u001b[49m\u001b[43mresponse\u001b[49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[43mgeneration_info\u001b[49m\u001b[43m)\u001b[49m\n",
+      "File \u001b[0;32m/opt/conda/lib/python3.12/site-packages/langchain_openai/chat_models/base.py:1033\u001b[0m, in \u001b[0;36mBaseChatOpenAI._create_chat_result\u001b[0;34m(self, response, generation_info)\u001b[0m\n\u001b[1;32m   1028\u001b[0m \u001b[38;5;66;03m# Sometimes the AI Model calling will get error, we should raise it.\u001b[39;00m\n\u001b[1;32m   1029\u001b[0m \u001b[38;5;66;03m# Otherwise, the next code 'choices.extend(response[\"choices\"])'\u001b[39;00m\n\u001b[1;32m   1030\u001b[0m \u001b[38;5;66;03m# will throw a \"TypeError: 'NoneType' object is not iterable\" error\u001b[39;00m\n\u001b[1;32m   1031\u001b[0m \u001b[38;5;66;03m# to mask the true error. Because 'response[\"choices\"]' is None.\u001b[39;00m\n\u001b[1;32m   1032\u001b[0m \u001b[38;5;28;01mif\u001b[39;00m response_dict\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124merror\u001b[39m\u001b[38;5;124m\"\u001b[39m):\n\u001b[0;32m-> 1033\u001b[0m     \u001b[38;5;28;01mraise\u001b[39;00m \u001b[38;5;167;01mValueError\u001b[39;00m(response_dict\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124merror\u001b[39m\u001b[38;5;124m\"\u001b[39m))\n\u001b[1;32m   1035\u001b[0m token_usage \u001b[38;5;241m=\u001b[39m response_dict\u001b[38;5;241m.\u001b[39mget(\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124musage\u001b[39m\u001b[38;5;124m\"\u001b[39m)\n\u001b[1;32m   1036\u001b[0m \u001b[38;5;28;01mfor\u001b[39;00m res \u001b[38;5;129;01min\u001b[39;00m response_dict[\u001b[38;5;124m\"\u001b[39m\u001b[38;5;124mchoices\u001b[39m\u001b[38;5;124m\"\u001b[39m]:\n",
+      "\u001b[0;31mValueError\u001b[0m: {'message': \"An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_l1lZw9NdVYqfwUJWOj5biwnx\", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}"
+     ]
+    }
+   ],
+   "source": [
+    "response = model_react.invoke({\"scratch_pad\": dummy_state[\"messages\"]})\n",
+    "print(\"Final response generated:\", response.content is not None)\n",
+    "print(\"More tools needed:\", bool(response.tool_calls))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**What Happens Here:**\n",
+    "1. The model has all necessary information.\n",
+    "2. It synthesizes weather data and clothing recommendations.\n",
+    "3. It generates a comprehensive response to the user.\n",
+    "4. No more tool calls needed—the reasoning cycle is complete.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Automating ReAct with Graphs\n",
+    "\n",
+    "### Why Use Graphs?\n",
+    "\n",
+    "Manual ReAct execution is educational but impractical for real applications. LangGraph automates this process with a state machine that handles the reasoning loop automatically.\n",
+    "\n",
+    "### Building the Core Functions\n",
+    "\n",
+    "#### Tool Execution Node\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def tool_node(state: AgentState):\n",
+    "    \"\"\"Execute all tool calls from the last message in the state.\"\"\"\n",
+    "    outputs = []\n",
+    "    for tool_call in state[\"messages\"][-1].tool_calls:\n",
+    "        tool_result = tools_by_name[tool_call[\"name\"]].invoke(tool_call[\"args\"])\n",
+    "        outputs.append(\n",
+    "            ToolMessage(\n",
+    "                content=json.dumps(tool_result),\n",
+    "                name=tool_call[\"name\"],\n",
+    "                tool_call_id=tool_call[\"id\"],\n",
+    "            )\n",
+    "        )\n",
+    "    return {\"messages\": outputs}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Function Purpose:**\n",
+    "- Automatically execute all tool calls from the model\n",
+    "- Handle multiple simultaneous tool calls\n",
+    "- Return properly formatted tool messages\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Model Invocation Node\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def call_model(state: AgentState):\n",
+    "    \"\"\"Invoke the model with the current conversation state.\"\"\"\n",
+    "    response = model_react.invoke({\"scratch_pad\": state[\"messages\"]})\n",
+    "    return {\"messages\": [response]}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Function Purpose:**\n",
+    "- Call the ReAct-enabled model\n",
+    "- Pass the full conversation context\n",
+    "- Return the model's response (which may include tool calls)\n",
+    "\n",
+    "#### Decision Logic\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def should_continue(state: AgentState):\n",
+    "    \"\"\"Determine whether to continue with tool use or end the conversation.\"\"\"\n",
+    "    messages = state[\"messages\"]\n",
+    "    last_message = messages[-1]\n",
+    "    # If there is no function call, then we finish\n",
+    "    if not last_message.tool_calls:\n",
+    "        return \"end\"\n",
+    "    # Otherwise if there is, we continue\n",
+    "    else:\n",
+    "        return \"continue\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Function Purpose:**\n",
+    "- Implement the control flow logic\n",
+    "- Decide whether the agent needs to use more tools\n",
+    "- Route the conversation to either tool execution or completion\n",
+    "\n",
+    "### Constructing the State Graph\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from langgraph.graph import StateGraph, END\n",
+    "\n",
+    "# Define a new graph\n",
+    "workflow = StateGraph(AgentState)\n",
+    "\n",
+    "# Define the two nodes we will cycle between\n",
+    "workflow.add_node(\"agent\", call_model)\n",
+    "workflow.add_node(\"tools\", tool_node)\n",
+    "\n",
+    "# Add edges between nodes\n",
+    "workflow.add_edge(\"tools\", \"agent\")  # After tools, always go back to agent\n",
+    "\n",
+    "# Add conditional logic\n",
+    "workflow.add_conditional_edges(\n",
+    "    \"agent\",\n",
+    "    should_continue,\n",
+    "    {\n",
+    "        \"continue\": \"tools\",  # If tools needed, go to tools node\n",
+    "        \"end\": END,          # If done, end the conversation\n",
+    "    },\n",
+    ")\n",
+    "\n",
+    "# Set entry point\n",
+    "workflow.set_entry_point(\"agent\")\n",
+    "\n",
+    "# Compile the graph\n",
+    "graph = workflow.compile()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Graph Structure Explained:**\n",
+    "1. **Agent Node**: Where reasoning happens and tool calls are generated.\n",
+    "2. **Tools Node**: Where tool execution occurs.\n",
+    "3. **Conditional Edge**: Determines whether to continue or finish.\n",
+    "4. **Entry Point**: Conversation always starts with the agent reasoning.\n",
+    "### Visualizing the Graph\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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",
+      "text/plain": [
+       "<IPython.core.display.Image object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from IPython.display import Image, display\n",
+    "\n",
+    "try:\n",
+    "    display(Image(graph.get_graph().draw_mermaid_png()))\n",
+    "except Exception:\n",
+    "    # This requires some extra dependencies and is optional\n",
+    "    pass"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This visualization shows the flow: Agent → Decision → Tools → Agent → Decision → End\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Running the Complete ReAct Agent\n",
+    "\n",
+    "### Final Execution\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "================================\u001b[1m Human Message \u001b[0m=================================\n",
+      "\n",
+      "What's the weather like in Zurich, and what should I wear based on the temperature?\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  search_tool (call_YoIO3ilHFD8HWT5h8Jv6Hvm8)\n",
+      " Call ID: call_YoIO3ilHFD8HWT5h8Jv6Hvm8\n",
+      "  Args:\n",
+      "    query: current weather Zurich\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: search_tool\n",
+      "\n",
+      "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  search_tool (call_DfhRwUTXVwzFN4vo4Z40Hy5n)\n",
+      " Call ID: call_DfhRwUTXVwzFN4vo4Z40Hy5n\n",
+      "  Args:\n",
+      "    query: current weather in Zurich\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: search_tool\n",
+      "\n",
+      "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "\n",
+      "It seems that I'm currently unable to access real-time weather data for Zurich due to a technical issue. However, I can guide you on how to find the current temperature and typical clothing recommendations based on various temperature ranges.\n",
+      "\n",
+      "To check the current weather in Zurich, you could use a weather website or an app. Look for the temperature in degrees Celsius or Fahrenheit.\n",
+      "\n",
+      "### Clothing Recommendations:\n",
+      "- **Below 0°C (32°F)**: Wear a heavy winter coat, thermal layers, gloves, a hat, and a scarf.\n",
+      "- **0°C - 10°C (32°F - 50°F)**: Wear a warm coat, long-sleeved shirts, sweaters, and possibly a hat and gloves depending on the wind chill.\n",
+      "- **10°C - 20°C (50°F - 68°F)**: Wear a light jacket, long sleeves, or a sweater. A light scarf may be useful.\n",
+      "- **Above 20°C (68°F)**: Wear short sleeves, shorts or skirts, and light clothing; do consider sunscreen and sunglasses if it's sunny.\n",
+      "\n",
+      "Once you find the current temperature, you can match it with the appropriate clothing category above. If you need help with anything else, let me know!\n"
+     ]
+    }
+   ],
+   "source": [
+    "def print_stream(stream):\n",
+    "    \"\"\"Helper function for formatting the stream nicely.\"\"\"\n",
+    "    for s in stream:\n",
+    "        message = s[\"messages\"][-1]\n",
+    "        if isinstance(message, tuple):\n",
+    "            print(message)\n",
+    "        else:\n",
+    "            message.pretty_print()\n",
+    "\n",
+    "inputs = {\"messages\": [HumanMessage(content=\"What's the weather like in Zurich, and what should I wear based on the temperature?\")]}\n",
+    "\n",
+    "print_stream(graph.stream(inputs, stream_mode=\"values\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**What You'll See:**\n",
+    "1. **Initial Reasoning**: Agent analyzes the query.\n",
+    "2. **Tool Call 1**: Searches for Zurich weather.\n",
+    "3. **Tool Result Processing**: Agent examines weather data.\n",
+    "4. **Tool Call 2**: Gets clothing recommendations.\n",
+    "5. **Final Synthesis**: Agent combines all information into a helpful response.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### The Complete ReAct Cycle\n",
+    "\n",
+    "The final execution demonstrates the full ReAct pattern:\n",
+    "\n",
+    "1. **Reasoning**: \"I need current weather data for Zurich\".\n",
+    "2. **Acting**: Calls search_tool(\"Zurich weather today\").\n",
+    "3. **Observing**: Processes search results, extracts temperature.\n",
+    "4. **Reasoning**: \"Now I need clothing recommendations for this temperature\".\n",
+    "5. **Acting**: Calls recommend_clothing(\"temperature from search\").\n",
+    "6. **Observing**: Gets clothing suggestions.\n",
+    "7. **Reasoning**: \"I can now provide a complete answer\".\n",
+    "8. **Final Response**: Synthesizes weather info and clothing recommendations.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Key Takeaways\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### What Makes ReAct Powerful\n",
+    "\n",
+    "1. **Transparency**: You can see the agent's reasoning process.\n",
+    "2. **Adaptability**: The agent can handle unexpected results and change course.\n",
+    "3. **Extensibility**: It's easy to add new tools and capabilities.\n",
+    "4. **Reliability**: The structured approach reduces hallucination and improves accuracy\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Best Practices\n",
+    "\n",
+    "1. **Tool Design**: Make tools focused and reliable.\n",
+    "2. **Error Handling**: Plan for tool failures and unexpected results.\n",
+    "3. **Context Management**: Keep state manageable and relevant.\n",
+    "4. **User Experience**: Provide clear feedback about what the agent is doing.\n",
+    "\n",
+    "The ReAct framework represents a significant step toward more capable and trustworthy AI agents that can reason through complex problems and take meaningful actions in the real world.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Exercises\n",
+    "\n",
+    "Now it's time to put your ReAct knowledge into practice! These exercises will help you build your own tools and extend the agent's capabilities.\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Exercise 1 - Build a Calculator Tool\n",
+    "\n",
+    "**Objective:** Create a mathematical calculator tool that can handle complex calculations.\n",
+    "\n",
+    "Your task is to create a calculator tool that can perform mathematical operations. This tool should be able to handle expressions like \"2 + 3 * 4\", \"sqrt(16)\", and \"sin(π/2)\".\n",
+    "\n",
+    "### Instructions:\n",
+    "1. Create a tool called `calculator_tool` using the `@tool` decorator.\n",
+    "2. The tool should accept a mathematical expression as a string.\n",
+    "3. Use Python's `eval()` function carefully (or better yet, use the `ast` module for safety).\n",
+    "4. Test your tool with various mathematical expressions.\n",
+    "5. Add your tool to the tools list and test it with the ReAct agent.\n",
+    "\n",
+    "### Starter Code:\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 52,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "================================\u001b[1m Human Message \u001b[0m=================================\n",
+      "\n",
+      "What is 15% of 250 plus the square root of 144?\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  calculator_tool (call_wKkHrdP84YP7gvVT0U7S1GAG)\n",
+      " Call ID: call_wKkHrdP84YP7gvVT0U7S1GAG\n",
+      "  Args:\n",
+      "    expression: 0.15 * 250\n",
+      "  calculator_tool (call_EFIS1Bmn7FMYABY63wIEUPy6)\n",
+      " Call ID: call_EFIS1Bmn7FMYABY63wIEUPy6\n",
+      "  Args:\n",
+      "    expression: sqrt(144)\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: calculator_tool\n",
+      "\n",
+      "\"12.0\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "\n",
+      "To calculate the value you requested, we first find 15% of 250 and the square root of 144:\n",
+      "\n",
+      "1. **15% of 250**: \n",
+      "   - \\( 0.15 \\times 250 = 37.5 \\)\n",
+      "\n",
+      "2. **Square root of 144**: \n",
+      "   - \\( \\sqrt{144} = 12 \\)\n",
+      "\n",
+      "Now, we add these two results together:\n",
+      "\n",
+      "\\[\n",
+      "37.5 + 12 = 49.5\n",
+      "\\]\n",
+      "\n",
+      "Thus, \\( 15\\% \\) of \\( 250 \\) plus the square root of \\( 144 \\) equals **49.5**.\n"
+     ]
+    }
+   ],
+   "source": [
+    "import math\n",
+    "import ast\n",
+    "import operator\n",
+    "\n",
+    "@tool\n",
+    "def calculator_tool(expression: str) -> str:\n",
+    "    \"\"\"\n",
+    "    Safely evaluate mathematical expressions.\n",
+    "    \n",
+    "    :param expression: A mathematical expression as a string (e.g., \"2 + 3 * 4\")\n",
+    "    :return: The result of the calculation\n",
+    "    \"\"\"\n",
+    "    # TODO: Implement safe mathematical evaluation\n",
+    "    # Hint: You can use ast.literal_eval for simple expressions\n",
+    "    # or create a safe evaluator for more complex math\n",
+    "    try:\n",
+    "        # --- This is the core of the safe evaluator ---\n",
+    "\n",
+    "        # 1. Define a whitelist of safe functions the LLM can call.\n",
+    "        safe_functions = {\n",
+    "            \"sqrt\": math.sqrt,\n",
+    "            \"pow\": pow,\n",
+    "            # Add other safe math functions here if needed\n",
+    "            # \"sin\": math.sin,\n",
+    "            # \"cos\": math.cos,\n",
+    "        }\n",
+    "\n",
+    "        # 2. Create a safe environment for eval().\n",
+    "        #    Start with __builtins__ being empty to block dangerous functions.\n",
+    "        safe_globals = {\"__builtins__\": {}}\n",
+    "        #    Merge our safe functions into this environment.\n",
+    "        safe_globals.update(safe_functions)\n",
+    "\n",
+    "        # 3. Execute eval() in the safe, restricted environment.\n",
+    "        #    The second argument is for globals, the third for locals.\n",
+    "        result = eval(expression, safe_globals, {})\n",
+    "        \n",
+    "        return str(result)\n",
+    "\n",
+    "    except Exception as e:\n",
+    "        # If the expression is invalid or uses a disallowed function,\n",
+    "        # return a helpful error message instead of crashing.\n",
+    "        return f\"Error: Invalid or unsupported expression. {e}\"\n",
+    "    \n",
+    "\n",
+    "tools=[calculator_tool]\n",
+    "tools_by_name={ tool.name:tool for tool in tools}\n",
+    "model_react=chat_prompt|model.bind_tools(tools)\n",
+    "\n",
+    "# Compile the graph\n",
+    "\n",
+    "inputs = {\"messages\": [HumanMessage(content=\"What is 15% of 250 plus the square root of 144?\")]}\n",
+    "print_stream(graph.stream(inputs, stream_mode=\"values\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Exercise 2 - Create a News Summary Tool\n",
+    "\n",
+    "**Objective:** Build a tool that can fetch and summarize recent news articles.\n",
+    "\n",
+    "Create a news summarization tool that works with the existing search functionality. This tool should take search results and create concise summaries of news articles.\n",
+    "\n",
+    "### Instructions:\n",
+    "1. Create a `news_summarizer_tool` that takes news content and creates summaries.\n",
+    "2. The tool should extract key information: headline, date, main points.\n",
+    "3. Format the output in a readable way.\n",
+    "4. Test it by asking the agent to \"search for recent AI news and summarize the top 3 articles\".\n",
+    "\n",
+    "### Starter Code:\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 48,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "@tool\n",
+    "def news_summarizer_tool(news_content: str) -> str:\n",
+    "    \"\"\"\n",
+    "    Summarize news articles from search results.\n",
+    "    \n",
+    "    :param news_content: Raw news content or search results\n",
+    "    :return: A formatted summary of the news\n",
+    "    \"\"\"\n",
+    "    # --- Step 1: Parse the news content ---\n",
+    "    # The hint says to split by articles. We assume articles are separated by \"---\".\n",
+    "    # .strip() removes any leading/trailing whitespace.\n",
+    "    articles = news_content.strip().split(\"---\")\n",
+    "    \n",
+    "    # This list will hold our formatted summary for each article.\n",
+    "    summaries = []\n",
+    "    \n",
+    "    # --- Step 2 & 3: Loop through articles, extract info, and format ---\n",
+    "    for article_text in articles:\n",
+    "        # Skip any empty strings that might result from the split.\n",
+    "        if not article_text.strip():\n",
+    "            continue\n",
+    "            \n",
+    "        try:\n",
+    "            # Split each article into lines to easily grab information.\n",
+    "            lines = article_text.strip().split('\\n')\n",
+    "            \n",
+    "            # Extract headline, date, and main points by finding the correct line\n",
+    "            # and removing the prefix (e.g., \"Headline: \").\n",
+    "            headline = [line for line in lines if line.startswith(\"Headline:\")][0].replace(\"Headline:\", \"\").strip()\n",
+    "            date = [line for line in lines if line.startswith(\"Date:\")][0].replace(\"Date:\", \"\").strip()\n",
+    "            content = [line for line in lines if line.startswith(\"Content:\")][0].replace(\"Content:\", \"\").strip()\n",
+    "            \n",
+    "            # Format this article's information into a readable summary block.\n",
+    "            formatted_summary = f\"Headline: {headline}\\nDate: {date}\\nSummary: {content}\"\n",
+    "            summaries.append(formatted_summary)\n",
+    "\n",
+    "        except IndexError:\n",
+    "            # This is a fallback in case an article is not formatted correctly.\n",
+    "            # It prevents the whole tool from crashing.\n",
+    "            continue\n",
+    "            \n",
+    "    # --- Step 4: Combine all summaries into a final output ---\n",
+    "    # Join the individual summaries with two newlines for clear separation.\n",
+    "    return \"\\n\\n\".join(summaries)\n",
+    "\n",
+    "# --- Final Step from Instructions: Add to tools list and test ---\n",
+    "tools = [search_tool, news_summarizer_tool]\n",
+    "tools_by_name={ tool.name:tool for tool in tools}\n",
+    "model_react=chat_prompt|model.bind_tools(tools)\n",
+    "\n",
+    "#\n",
+    "# And then you would test it with a prompt like:\n",
+    "# \"find recent news about artificial intelligence and give me a summary\"\n",
+    "\n",
+    "# TODO: Add to tools list and test with:\n",
+    "# \"Find recent news about artificial intelligence and give me a summary\""
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Testing Your Solutions\n",
+    "\n",
+    "For each exercise, test your implementation with these commands:\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 47,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "================================\u001b[1m Human Message \u001b[0m=================================\n",
+      "\n",
+      "Calculate 15% of 250 plus the square root of 144\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "\n",
+      "To calculate \\( 15\\% \\) of \\( 250 \\) plus the square root of \\( 144 \\), we can break it down into two parts:\n",
+      "\n",
+      "1. **Calculate \\( 15\\% \\) of \\( 250 \\)**:\n",
+      "   \\[\n",
+      "   15\\% \\text{ of } 250 = \\frac{15}{100} \\times 250 = 0.15 \\times 250 = 37.5\n",
+      "   \\]\n",
+      "\n",
+      "2. **Calculate the square root of \\( 144 \\)**:\n",
+      "   \\[\n",
+      "   \\sqrt{144} = 12\n",
+      "   \\]\n",
+      "\n",
+      "Now, we can add the two results together:\n",
+      "\\[\n",
+      "37.5 + 12 = 49.5\n",
+      "\\]\n",
+      "\n",
+      "Therefore, the final result is \\( 49.5 \\).\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Exercise 1 Test\n",
+    "inputs = {\"messages\": [HumanMessage(content=\"Calculate 15% of 250 plus the square root of 144\")]}\n",
+    "print_stream(graph.stream(inputs, stream_mode=\"values\"))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 49,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "================================\u001b[1m Human Message \u001b[0m=================================\n",
+      "\n",
+      "Find recent AI news and summarize the top 3 articles\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  search_tool (call_WGVfM52f0ElFEJdmyaYGS93D)\n",
+      " Call ID: call_WGVfM52f0ElFEJdmyaYGS93D\n",
+      "  Args:\n",
+      "    query: recent AI news\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: search_tool\n",
+      "\n",
+      "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  search_tool (call_YKLFK2annlTOD13niMBkLxM4)\n",
+      " Call ID: call_YKLFK2annlTOD13niMBkLxM4\n",
+      "  Args:\n",
+      "    query: latest news in artificial intelligence\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: search_tool\n",
+      "\n",
+      "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  search_tool (call_KBadUWwpwuFLreCs3CcHXd7A)\n",
+      " Call ID: call_KBadUWwpwuFLreCs3CcHXd7A\n",
+      "  Args:\n",
+      "    query: AI news October 2023\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: search_tool\n",
+      "\n",
+      "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "Tool Calls:\n",
+      "  search_tool (call_83Q20t4ZT7yxZFd5xsdPPcRj)\n",
+      " Call ID: call_83Q20t4ZT7yxZFd5xsdPPcRj\n",
+      "  Args:\n",
+      "    query: AI news\n",
+      "=================================\u001b[1m Tool Message \u001b[0m=================================\n",
+      "Name: search_tool\n",
+      "\n",
+      "\"HTTPError('401 Client Error: Unauthorized for url: https://api.tavily.com/search')\"\n",
+      "==================================\u001b[1m Ai Message \u001b[0m==================================\n",
+      "\n",
+      "It appears that I'm currently unable to access the news search tool due to an authorization issue. However, I can provide you with a general summary of recent trends and topics in AI based on my existing knowledge.\n",
+      "\n",
+      "1. **Generative AI Advancements**: There have been significant improvements in generative AI technologies, with major models being utilized in various creative fields including writing, music composition, and visual arts. Companies are increasingly focusing on responsible AI use to prevent misuse.\n",
+      "\n",
+      "2. **AI in Healthcare**: The integration of AI in healthcare continues to expand, with new applications for diagnostic tools and personalized medicine. AI models are being developed to analyze medical images and predict patient outcomes more accurately.\n",
+      "\n",
+      "3. **Regulatory Developments**: Governments around the world are beginning to draft regulations for the use of AI. There's a growing concern about the ethical implications of AI, including bias in algorithms and data privacy issues, prompting discussions on the need for regulatory frameworks.\n",
+      "\n",
+      "If you would like, I can attempt to summarize some general topics on AI or look for specific aspects of AI news if you have any particular focus in mind.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Exercise 2 Test  \n",
+    "inputs = {\"messages\": [HumanMessage(content=\"Find recent AI news and summarize the top 3 articles\")]}\n",
+    "print_stream(graph.stream(inputs, stream_mode=\"values\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Authors\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "[Joseph Santarcangelo](https://author.skills.network/instructors/joseph_santarcangelo): Joseph has a Ph.D. in Electrical Engineering, his research focused on using machine learning, signal processing, and computer vision to determine how videos impact human cognition. Joseph has been working for IBM since he completed his PhD.\n",
+    "\n",
+    "[Tenzin Migmar](https://author.skills.network/instructors/tenzin_migmar): Hi, I'm Tenzin. I'm a data scientist intern at IBM interested in applying machine learning to solve difficult problems. Prior to joining IBM, I worked as a research assistant on projects exploring perspectivism and personalization within large language models. In my free time, I enjoy recreational programming and learning to cook new recipes.\n",
+    "\n",
+    "[Faranak Heidari](https://www.linkedin.com/in/faranakhdr/) is a data scientist and AI developer in IBM. \n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<!--#### Change Log\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<!--\n",
+    "|Date (YYYY-MM-DD)|Version|Changed By|Change Description|\n",
+    "|-|-|-|-|\n",
+    "|2024-02-23|0.2|Elio Di Nino|Update library documentation|\n",
+    "|2020-07-17|0.1|Sam|Create lab template|\n",
+    "-->\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Copyright © IBM Corporation. All rights reserved.\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.8"
+  },
+  "prev_pub_hash": "8c934cd1f83b596adfcbc5587f1033178f6fdba432838b18df7d9d0e24b2f6c9"
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
